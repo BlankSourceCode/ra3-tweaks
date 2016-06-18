@@ -42,7 +42,6 @@ namespace RA3Tweaks.Tweaks
             }
         }
 
-        [Tweak("ComponentInfoList", "LoadFromJsonString")]
         public static TweakReturn<int> LoadFromJsonString(ComponentInfoList instance, string jsonString)
         {
             Plugin.Initialize();

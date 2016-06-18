@@ -12,36 +12,11 @@ namespace RA3Tweaks.Tweaks
         public static void Initialize()
         {
             Debug.Log("RA3Injection::Plugin Initialized\n");
-            // TextAsset textAsset = Resources.Load("Databases/Components") as TextAsset;
-            
-            // List<string> allPrefabNames = new List<string>();
-            // string allComponents = textAsset.text;
-            // string find = "\"componentprefabname\": \"";
-            // int start = allComponents.IndexOf(find);
-            // while (start >= 0)
-            // {
-            //     start += find.Length;
-            //     int end = allComponents.IndexOf("\",", start);
-            //     string name = allComponents.Substring(start, (end - start));
-            //     allPrefabNames.Add(name);
-
-            //     start = allComponents.IndexOf(find, end + 1);
-            //     Debug.Log("Name = ." + name + ".");
-            // }
-
-            // foreach (var name in allPrefabNames)
-            // {
-    	    //     GameObject go = (GameObject)UnityEngine.Object.Instantiate(Resources.Load("ComponentPrefabs/" + name));    
-            // 	   ObjExporter.DoExport(go, true, @"D:\" + name + ".obj");
-            // }
           
             ComponentInfoList.CreateFromFileOrResource(Application.dataPath + "/Components.json", "Databases/Components");
 
             GameObject go = (GameObject)UnityEngine.Object.Instantiate(Resources.Load("ComponentPrefabs/CompSawBlade60"));
-            StringBuilder sb = new StringBuilder();
-            LogTransform(go.transform, 0, ref sb);
-            Debug.Log("find me");
-            Debug.Log(sb.ToString());
+            TweakHelpers.LogTransform(go.transform, "");
 
             string jsonString = System.IO.File.ReadAllText(@"D:\components.json");
 		    System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
@@ -158,23 +133,8 @@ namespace RA3Tweaks.Tweaks
             }
         }
 
-        static void LogTransform(Transform t, int indent, ref StringBuilder sb)
-        {
-            Component[] all = t.gameObject.GetComponents<Component>();
-            for (int i = 0; i < all.Length; i++) {
-                string s = new string(' ', indent);
-                sb.AppendLine(s + all[i].ToString());
-            }
-
-            for (int i = 0; i < t.childCount; i++)
-            {
-                LogTransform(t.GetChild(i), ++indent, ref sb);
-            }
-        }
-
         void Start()
         {
-            
         }
 
         void Update()
