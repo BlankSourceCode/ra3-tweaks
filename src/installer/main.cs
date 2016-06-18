@@ -200,16 +200,24 @@ namespace RA3Tweaks.Installer
                 var attribs = methods[i].CustomAttributes.Where(a => a.AttributeType.FullName == "RA3Tweaks.TweakAttribute").ToArray();
                 for (int j = 0; j < attribs.Length; j++)
                 {
+                    // Read the parameters from the attribute
                     string fromClassName = attribs[j].ConstructorArguments[0].Value.ToString();
                     string fromMethodName = attribs[j].ConstructorArguments[1].Value.ToString();
                     bool insertAtStart = true;
+                    string replaceName = null;
                     if (attribs[j].ConstructorArguments.Count > 2)
                     {
-                        insertAtStart = ((bool)attribs[j].ConstructorArguments[2].Value);
+                        if (attribs[j].ConstructorArguments[2].Type.FullName == "System.Boolean")
+                        {
+                            insertAtStart = ((bool)attribs[j].ConstructorArguments[2].Value);
+                        }
+                        else
+                        {
+                            replaceName = attribs[j].ConstructorArguments[2].Value.ToString();
+                        }
                     }
 
-                    Console.WriteLine(string.Format("Inserting call from {0}.{1} to {2}.{3}...", fromClassName, fromMethodName, methods[i].DeclaringType.Name, methods[i].Name));
-
+                    // Get the matching caller and callee
                     MethodDefinition callTo = methods[i];
                     MethodDefinition callFrom = ra3.MainModule
                         .Types
@@ -218,112 +226,162 @@ namespace RA3Tweaks.Installer
                         .Where(m => m.Name == fromMethodName)
                         .First();
 
-                    ILProcessor processor = callFrom.Body.GetILProcessor();
-                    Instruction entryInstr = (insertAtStart ? processor.Body.Instructions[0] : processor.Body.Instructions.Last());
+                    Console.WriteLine(string.Format("\r\nProcessing '{0}'...", callTo.Name));
 
-                    // Validate parameters
-                    bool isValid = (callFrom.Parameters.Count + 1 == callTo.Parameters.Count) && 
-                                   (callTo.Parameters[0].ParameterType.FullName == callFrom.DeclaringType.FullName) &&
-                                   ((callTo.ReturnType.FullName == "System.Void") ||
-                                    (callTo.ReturnType.FullName == "RA3Tweaks.TweakReturnVoid" && callFrom.ReturnType.FullName == "System.Void") ||
-                                    callTo.ReturnType.FullName.StartsWith("RA3Tweaks.TweakReturn") && callTo.ReturnType.IsGenericInstance && (callTo.ReturnType as GenericInstanceType).GenericArguments[0].FullName == callFrom.ReturnType.FullName);
-                    if (isValid)
+                    // Create the object that allows us to re-write the C# IL
+                    ILProcessor processor = callFrom.Body.GetILProcessor();
+
+                    if (string.IsNullOrEmpty(replaceName))
                     {
-                        for (int k = 0; k < callFrom.Parameters.Count; k++)
+                        // Insert at start or end
+                        Console.WriteLine(string.Format("Inserting call from {0}.{1} to {2}.{3}", fromClassName, fromMethodName, methods[i].DeclaringType.Name, methods[i].Name));
+
+                        Instruction entryInstr = (insertAtStart ? processor.Body.Instructions[0] : processor.Body.Instructions.Last());
+
+                        // Validate parameters
+                        bool isValid = (callFrom.Parameters.Count + 1 == callTo.Parameters.Count) &&
+                                       (callTo.Parameters[0].ParameterType.FullName == callFrom.DeclaringType.FullName) &&
+                                       ((callTo.ReturnType.FullName == "System.Void") ||
+                                        (callTo.ReturnType.FullName == "RA3Tweaks.TweakReturnVoid" && callFrom.ReturnType.FullName == "System.Void") ||
+                                        callTo.ReturnType.FullName.StartsWith("RA3Tweaks.TweakReturn") && callTo.ReturnType.IsGenericInstance && (callTo.ReturnType as GenericInstanceType).GenericArguments[0].FullName == callFrom.ReturnType.FullName);
+                        if (isValid)
                         {
-                            if (callFrom.Parameters[k].ParameterType.FullName != callTo.Parameters[k + 1].ParameterType.FullName)
+                            for (int k = 0; k < callFrom.Parameters.Count; k++)
                             {
-                                Console.WriteLine("Error - Parameter types do not match.");
-                                isValid = false;
-                                break;
+                                if (callFrom.Parameters[k].ParameterType.FullName != callTo.Parameters[k + 1].ParameterType.FullName)
+                                {
+                                    Console.WriteLine("Error - Parameter types do not match.");
+                                    isValid = false;
+                                    break;
+                                }
                             }
                         }
-                    }
 
-                    if (!isValid)
-                    {
-                        Console.WriteLine("Error - Could not validate tweak method, check parameters and return type match.");
-                        continue;
-                    }
-
-                    // Add parameters to the call
-                    processor.InsertBefore(entryInstr, processor.Create(callFrom.IsStatic ? OpCodes.Ldnull : OpCodes.Ldarg_0));
-                    if (callFrom.Parameters.Count > 0)
-                    {
-                        processor.InsertBefore(entryInstr, processor.Create(callFrom.IsStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1));
-                    }
-                    if (callFrom.Parameters.Count > 1)
-                    {
-                        processor.InsertBefore(entryInstr, processor.Create(callFrom.IsStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2));
-                    }
-                    if (callFrom.Parameters.Count > 2)
-                    {
-                        processor.InsertBefore(entryInstr, processor.Create(callFrom.IsStatic ? OpCodes.Ldarg_2 : OpCodes.Ldarg_3));
-                    }
-                    if (callFrom.Parameters.Count > 3)
-                    {
-                        if (callFrom.IsStatic)
+                        if (!isValid)
                         {
-                            processor.InsertBefore(entryInstr, processor.Create(OpCodes.Ldarg_3));
-                        }
-                        else
-                        {
-                            processor.InsertBefore(entryInstr, processor.Create(OpCodes.Ldarg_S, callFrom.Parameters[4]));
-                        }
-                    }
-                    if (callFrom.Parameters.Count > 4)
-                    {
-                        for (int l = 4; l < callFrom.Parameters.Count; l++)
-                        {
-                            processor.InsertBefore(entryInstr, processor.Create(OpCodes.Ldarg_S, callFrom.Parameters[callFrom.IsStatic ? l - 1 : l]));
-                        }
-                    }
-
-                    // Add call to hook
-                    processor.InsertBefore(entryInstr, processor.Create(OpCodes.Call, ra3.MainModule.Import(callTo.Resolve())));
-
-                    // Check the return value
-                    if (methods[i].ReturnType.FullName != "System.Void")
-                    {
-                        // Create the local variable for the return value
-                        var tweakReturnType = callTo.ReturnType;
-                        VariableDefinition tweakReturnVar = new VariableDefinition("returnValue", ra3.MainModule.Import(tweakReturnType));
-                        processor.Body.Variables.Add(tweakReturnVar);
-
-                        FieldDefinition preventDefaultType = tweakReturnType.Resolve().Fields.First(f => f.Name == "PreventDefault");
-                        FieldReference preventDefault = preventDefaultType.Resolve();
-                        FieldDefinition returnValueType = null;
-                        FieldReference returnValue = null;
-
-                        // If we are looking to return a value from the caller, we create the types here
-                        if (tweakReturnType.Resolve().HasGenericParameters)
-                        {
-                            preventDefault = new FieldReference(preventDefaultType.Name, preventDefaultType.FieldType, tweakReturnType);
-
-                            returnValueType = tweakReturnType.Resolve().Fields.First(f => f.Name == "ReturnValue");
-                            returnValue = new FieldReference(returnValueType.Name, returnValueType.FieldType, tweakReturnType);
+                            Console.WriteLine("Error - Could not validate tweak method, check parameters and return type match.");
+                            continue;
                         }
 
-                        // Add the check for the 'preventDefault' value
-                        processor.InsertBefore(entryInstr, processor.Create(OpCodes.Stloc_S, tweakReturnVar));
-                        processor.InsertBefore(entryInstr, processor.Create(OpCodes.Ldloca_S, tweakReturnVar));
-                        processor.InsertBefore(entryInstr, processor.Create(OpCodes.Ldfld, ra3.MainModule.Import(preventDefault)));
-                        processor.InsertBefore(entryInstr, processor.Create(OpCodes.Brfalse, entryInstr));
-
-                        // Add the actual return value if needed
-                        if (callFrom.ReturnType.FullName != "System.Void")
+                        // Add parameters to the call
+                        processor.InsertBefore(entryInstr, processor.Create(callFrom.IsStatic ? OpCodes.Ldnull : OpCodes.Ldarg_0));
+                        if (callFrom.Parameters.Count > 0)
                         {
+                            processor.InsertBefore(entryInstr, processor.Create(callFrom.IsStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1));
+                        }
+                        if (callFrom.Parameters.Count > 1)
+                        {
+                            processor.InsertBefore(entryInstr, processor.Create(callFrom.IsStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2));
+                        }
+                        if (callFrom.Parameters.Count > 2)
+                        {
+                            processor.InsertBefore(entryInstr, processor.Create(callFrom.IsStatic ? OpCodes.Ldarg_2 : OpCodes.Ldarg_3));
+                        }
+                        if (callFrom.Parameters.Count > 3)
+                        {
+                            if (callFrom.IsStatic)
+                            {
+                                processor.InsertBefore(entryInstr, processor.Create(OpCodes.Ldarg_3));
+                            }
+                            else
+                            {
+                                processor.InsertBefore(entryInstr, processor.Create(OpCodes.Ldarg_S, callFrom.Parameters[4]));
+                            }
+                        }
+                        if (callFrom.Parameters.Count > 4)
+                        {
+                            for (int l = 4; l < callFrom.Parameters.Count; l++)
+                            {
+                                processor.InsertBefore(entryInstr, processor.Create(OpCodes.Ldarg_S, callFrom.Parameters[callFrom.IsStatic ? l - 1 : l]));
+                            }
+                        }
+
+                        // Add call to hook
+                        processor.InsertBefore(entryInstr, processor.Create(OpCodes.Call, ra3.MainModule.Import(callTo.Resolve())));
+
+                        // Check the return value
+                        if (methods[i].ReturnType.FullName != "System.Void")
+                        {
+                            // Create the local variable for the return value
+                            var tweakReturnType = callTo.ReturnType;
+                            VariableDefinition tweakReturnVar = new VariableDefinition("returnValue", ra3.MainModule.Import(tweakReturnType));
+                            processor.Body.Variables.Add(tweakReturnVar);
+
+                            FieldDefinition preventDefaultType = tweakReturnType.Resolve().Fields.First(f => f.Name == "PreventDefault");
+                            FieldReference preventDefault = preventDefaultType.Resolve();
+                            FieldDefinition returnValueType = null;
+                            FieldReference returnValue = null;
+
+                            // If we are looking to return a value from the caller, we create the types here
+                            if (tweakReturnType.Resolve().HasGenericParameters)
+                            {
+                                preventDefault = new FieldReference(preventDefaultType.Name, preventDefaultType.FieldType, tweakReturnType);
+
+                                returnValueType = tweakReturnType.Resolve().Fields.First(f => f.Name == "ReturnValue");
+                                returnValue = new FieldReference(returnValueType.Name, returnValueType.FieldType, tweakReturnType);
+                            }
+
+                            // Add the check for the 'preventDefault' value
+                            processor.InsertBefore(entryInstr, processor.Create(OpCodes.Stloc_S, tweakReturnVar));
                             processor.InsertBefore(entryInstr, processor.Create(OpCodes.Ldloca_S, tweakReturnVar));
-                            processor.InsertBefore(entryInstr, processor.Create(OpCodes.Ldfld, ra3.MainModule.Import(returnValue)));
+                            processor.InsertBefore(entryInstr, processor.Create(OpCodes.Ldfld, ra3.MainModule.Import(preventDefault)));
+                            processor.InsertBefore(entryInstr, processor.Create(OpCodes.Brfalse, entryInstr));
+
+                            // Add the actual return value if needed
+                            if (callFrom.ReturnType.FullName != "System.Void")
+                            {
+                                processor.InsertBefore(entryInstr, processor.Create(OpCodes.Ldloca_S, tweakReturnVar));
+                                processor.InsertBefore(entryInstr, processor.Create(OpCodes.Ldfld, ra3.MainModule.Import(returnValue)));
+                            }
+
+                            processor.InsertBefore(entryInstr, processor.Create(OpCodes.Ret));
+                        }
+                    }
+                    else
+                    {
+                        // Replace All
+                        // Calculate what the method signiture will be for the call we want to replace
+                        int paramStart = callTo.FullName.IndexOf('(');
+                        int paramEnd = callTo.FullName.IndexOf(')', paramStart);
+                        if (paramStart >= paramEnd || paramStart == -1)
+                        {
+                            Console.WriteLine("Error - Could not parse callTo method: " + callTo.FullName);
+                            continue;
                         }
 
-                        processor.InsertBefore(entryInstr, processor.Create(OpCodes.Ret));
+                        string paramSig = callTo.FullName.Substring(paramStart, paramEnd - paramStart + 1);
+                        string callToReplaceSig = string.Format("{0} {1}{2}", callTo.ReturnType.FullName, replaceName, paramSig);
+
+                        // Now find matching calls to that method
+                        var callFromInstructions = callFrom.Body.Instructions
+                            .Where(ii => ii != null && 
+                                         ii.OpCode == OpCodes.Call && 
+                                         ii.Operand != null && 
+                                         ii.Operand.ToString() == callToReplaceSig)
+                            .ToArray();
+
+                        if (callFromInstructions.Length == 0)
+                        {
+                            Console.WriteLine(string.Format("Error - No suitable call found in {0}.{1} that matches {2}", fromClassName, fromMethodName, callToReplaceSig));
+                            continue;
+                        }
+
+                        // Now replace the call
+                        foreach (var instruction in callFromInstructions)
+                        {
+                            Console.WriteLine(string.Format("Replacing call to {0} in {1}.{2}", instruction.Operand.ToString(), fromClassName, fromMethodName));
+                            processor.Replace(instruction, processor.Create(OpCodes.Call, ra3.MainModule.Import(callTo.Resolve())));
+                        }
                     }
+
+                    Console.WriteLine("Done.");
                 }
             }
 
             File.Delete(assemblyPath);
             ra3.Write(assemblyPath);
+
+            Console.WriteLine("\r\nModifications complete.");
         }
 
         private static void ShowHelp()

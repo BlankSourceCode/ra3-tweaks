@@ -42,6 +42,16 @@ namespace RA3Tweaks.Tweaks
             }
         }
 
+
+        [Tweak("Bot", "LoadBotComponents", "UnityEngine.Resources::Load")]
+        [Tweak("MenuBotLab", "CreateChassisNew", "UnityEngine.Resources::Load")]
+        [Tweak("MenuBotLab", "CreateChassis", "UnityEngine.Resources::Load")]
+        [Tweak("MenuBotLab", "CreateComponent", "UnityEngine.Resources::Load")]
+        public static UnityEngine.Object LoadResources(string name)
+        {
+            return Resources.Load(name);
+        }
+
         public static TweakReturn<int> LoadFromJsonString(ComponentInfoList instance, string jsonString)
         {
             Plugin.Initialize();
