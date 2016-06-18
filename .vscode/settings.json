@@ -1,0 +1,8 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+    "files.exclude": {
+        "**/obj": true,
+        "src/unity/Library/**": true,
+        "src/unity/Temp/**": true
+    }
+}

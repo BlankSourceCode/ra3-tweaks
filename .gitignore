@@ -1,0 +1,14 @@
+*.suo
+*.user
+out
+obj
+dis
+
+src/unity/.DS_Store
+src/unity/Library
+src/unity/Temp
+src/unity/*.csproj
+src/unity/*.pidb
+src/unity/*.unityproj
+src/unity/*.userprefs
+src/unity/*.sln

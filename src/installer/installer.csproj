@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="14.0">
+    <PropertyGroup>
+        <AssemblyName>ra3-tweaker</AssemblyName>
+        <OutputPath>..\..\out\</OutputPath>
+        <IntermediateOutputPath>..\..\out\obj\</IntermediateOutputPath>
+        <OutputType>exe</OutputType>
+        <OldToolsVersion>2.0</OldToolsVersion>
+        <ProjectGuid>{E07B868D-98F8-4B15-900D-1F3B91A26FDB}</ProjectGuid>
+        <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    </PropertyGroup>
+    <ItemGroup>
+        <Reference Include="System" />
+        <Reference Include="../../lib/Mono.Cecil.dll" />
+        <Compile Include="./**/*.cs" />
+    </ItemGroup>
+    <Target Name="Build">
+        <MakeDir Directories="$(OutputPath)" Condition="!Exists('$(OutputPath)')" />
+        <Csc Sources="@(Compile)" OutputAssembly="$(OutputPath)$(AssemblyName).exe" />
+    </Target>
+    <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
