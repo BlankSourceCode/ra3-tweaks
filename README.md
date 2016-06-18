@@ -20,6 +20,9 @@ Optional parameters:
 RA3-Tweaks uses [Mono.Cecil](https://github.com/jbevain/cecil) to re-write some of the C# IL code that is used by the game.
 The re-written code is inserted to make calls out to another C# dll that can add new functionality to the game.
 It also uses [Unity](http://unity3d.com/) [asset bundles](http://docs.unity3d.com/Manual/AssetBundlesIntro.html) to add new UI and Unity assets.
+This work was inspired by this [Q&A Post](http://steamcommunity.com/games/363530/announcements/detail/853808393799416587) from the RA3 developers:
+> I'd also like to ask if any modding tools will be supplied by Octopus Tree 
+> - Not at initial release. Between us, Unity games are HIGHLY MODDABLE without any support required on the Dev side. Clever folks can actually hook right into the C# mono code.
 
 
 ## Current Tweaks
