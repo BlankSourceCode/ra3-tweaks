@@ -19,7 +19,7 @@ Optional parameters:
 ## How it works
 RA3-Tweaks uses [Mono.Cecil](https://github.com/jbevain/cecil) to re-write some of the C# IL code that is used by the game.
 The re-written code is inserted to make calls out to another C# dll that can add new functionality to the game.
-It also uses [Unity](http://unity3d.com/) [asset bundles](http://docs.unity3d.com/Manual/AssetBundlesIntro.html) to add new UI and Unity based components.
+It also uses [Unity](http://unity3d.com/) [asset bundles](http://docs.unity3d.com/Manual/AssetBundlesIntro.html) to add new UI and Unity assets.
 
 
 ## Current Tweaks
