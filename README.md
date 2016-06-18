@@ -27,6 +27,7 @@ The current code changes that are applied are:
 * Added RA3-Tweaks Menu button
 * Ability to write out the components.json file to disk
 * Ability to export the models as *.obj files
+* Note: Exported files are outputted to `<Robot Arena 3 Directory>\RobotArena3_Data\Managed\ra3-tweaks\exported`
 
 
 ## Future improvements
