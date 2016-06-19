@@ -3,7 +3,7 @@
     <PropertyGroup>
         <AssemblyName>ra3-tweaker</AssemblyName>
         <OutputPath>..\..\out\</OutputPath>
-        <IntermediateOutputPath>..\..\out\obj\</IntermediateOutputPath>
+        <IntermediateOutputPath>..\..\out\obj\installer\</IntermediateOutputPath>
         <OutputType>exe</OutputType>
         <OldToolsVersion>2.0</OldToolsVersion>
         <ProjectGuid>{E07B868D-98F8-4B15-900D-1F3B91A26FDB}</ProjectGuid>

@@ -147,6 +147,23 @@ namespace RA3Tweaks.Installer
                     string finalPath = Path.Combine(rootPath, tweakDllName);
                     File.Copy(tweakSrcPath, finalPath, true);
 
+                    // Search for debug info
+                    string tweakSrcRootPath = Path.GetDirectoryName(tweakSrcPath);
+                    string monoDebugFile = Path.Combine(tweakSrcRootPath, tweakDllName + ".mdb");
+                    string vsDebugFile = Path.Combine(tweakSrcRootPath, Path.GetFileNameWithoutExtension(tweakDllName) + ".pdb");
+
+                    if (File.Exists(monoDebugFile))
+                    {
+                        Console.WriteLine("Debug mono info found, copying to destination...");
+                        File.Copy(monoDebugFile, Path.Combine(rootPath, Path.GetFileName(monoDebugFile)), true);
+                    }
+
+                    if (File.Exists(vsDebugFile))
+                    {
+                        Console.WriteLine("Debug vs info found, copying to destination...");
+                        File.Copy(vsDebugFile, Path.Combine(rootPath, Path.GetFileName(vsDebugFile)), true);
+                    }
+
                     // Make the asset path
                     if (!Directory.Exists(assetSrcPath))
                     {

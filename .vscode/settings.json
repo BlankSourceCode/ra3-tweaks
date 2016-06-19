@@ -3,6 +3,8 @@
     "files.exclude": {
         "**/obj": true,
         "src/unity/Library/**": true,
-        "src/unity/Temp/**": true
+        "src/unity/Temp/**": true,
+         "*.opendb": true,
+         "*.sdf": true
     }
 }

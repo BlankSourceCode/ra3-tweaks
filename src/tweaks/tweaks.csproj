@@ -1,31 +1,34 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="14.0">
-    <PropertyGroup>
-        <AssemblyName>ra3-tweaks</AssemblyName>
-        <OutputPath>..\..\out\</OutputPath>
-        <IntermediateOutputPath>..\..\out\obj\</IntermediateOutputPath>
-        <OutputType>Library</OutputType>
-        <OldToolsVersion>2.0</OldToolsVersion>
-        <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
-    </PropertyGroup>
-    <PropertyGroup>
-        <RA3InstallDir>$(registry:HKEY_CURRENT_USER\SOFTWARE\Valve\Steam@SteamPath)/steamapps/common/Robot Arena 3/RobotArena3_Data/Managed</RA3InstallDir>
-    </PropertyGroup>
-    <ItemGroup>
-        <Reference Include="System" />
-        <Reference Include="$(RA3InstallDir)/UnityEngine.dll" />
-        <Reference Include="$(RA3InstallDir)/UnityEngine.UI.dll" />
-        <Reference Include="$(RA3InstallDir)/Assembly-CSharp.dll" />
-        <Compile Include="./**/*.cs;../api/**/*.cs" />
-    </ItemGroup>
-    <ItemGroup>
-        <Content Include="../api/**/*.cs">
-            <Link>APIFiles</Link>
-        </Content>
-    </ItemGroup>
-    <Target Name="Build">
-        <MakeDir Directories="$(OutputPath)" Condition="!Exists('$(OutputPath)')" />
-        <Csc Sources="@(Compile)" OutputAssembly="$(OutputPath)$(AssemblyName).dll" />
-    </Target>
-    <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <ProjectGuid>{D536D74B-EAAF-4200-AF09-5C4DB7BACA18}</ProjectGuid>
+    <AssemblyName>ra3-tweaks</AssemblyName>
+    <OutputPath>..\..\out\</OutputPath>
+    <IntermediateOutputPath>..\..\out\obj\tweaks\</IntermediateOutputPath>
+    <OutputType>Library</OutputType>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RA3InstallDir>$(registry:HKEY_CURRENT_USER\SOFTWARE\Valve\Steam@SteamPath)/steamapps/common/Robot Arena 3/RobotArena3_Data/Managed</RA3InstallDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="$(RA3InstallDir)/UnityEngine.dll" />
+    <Reference Include="$(RA3InstallDir)/UnityEngine.UI.dll" />
+    <Reference Include="$(RA3InstallDir)/Assembly-CSharp.dll" />
+    <Compile Include="./**/*.cs;../api/**/*.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="../api/**/*.cs">
+      <Link>APIFiles</Link>
+    </Content>
+  </ItemGroup>
+  <Target Name="Build">
+    <MakeDir Directories="$(OutputPath)" Condition="!Exists('$(OutputPath)')" />
+    <Csc Sources="@(Compile)" OutputAssembly="$(OutputPath)$(AssemblyName).dll" />
+  </Target>
+  <PropertyGroup>
+    <PostBuildEvent>$(SolutionDir)lib\pdb2mdb.exe $(SolutionDir)out\$(AssemblyName).dll</PostBuildEvent>
+  </PropertyGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

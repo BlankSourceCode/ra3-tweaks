@@ -19,7 +19,7 @@ To get started with RA3-Tweaks development you will need the following installed
 
 
 ## Components
-The project is split into 3 components that have different uses. 
+The project is split into 4 components that have different uses. 
 
 ### Installer
 The code lives under `src\installer`
@@ -42,6 +42,23 @@ The code lives under `src\unity`
 This is a unity project that builds the `ra3-tweaks.asset` asset bundle. It is used to import new Unity components into the RA3 game. Right now that just means a few menu buttons as GameObjects and an example component.
 * Open this project in Unity using the `src\unity` folder, and then the `Workspace.unity` Unity scene
 * Build the asset bundle using the provided editor script by selecting `Build RA3-Tweaks AssetBundles...` from the `Assets` menu in Unity
+
+### Debugger
+The code lives under `src\debugger`
+
+This contains two projects to enable debugging your injected C# code (unfortunately you cannot debug RA3 itself but you can see variables in watches).
+This is a version of [dynity](https://github.com/HearthSim/dynity) modified to work with RA3. See their github page for more instructions on how to use it.
+
+But a quick start guide is:
+* Build the solution to produce debug.exe and dynity.dll
+* Set the environment variable UNITY_GIVE_CHANCE_TO_ATTACH_DEBUGGER to 1 (restart RA3 if it was running)
+* Run `RobotArena3.exe` (you should see a message box asking you to attach a debugger)
+* Run `debug.exe` (you should see a new console window show that the mono debugger has started)
+* Click OK on the message box
+* In Visual Studio, select `Debug` -> `Attach Unity Debugger`
+* Click the `Input IP` button (the info should be auto populated correctly - if not edit it)
+* Click OK
+* Now you should be able to add breakpoints in your RA3-Tweaks C# code
 
 ## Contributing
 ToDo

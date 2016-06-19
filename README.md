@@ -20,6 +20,7 @@ Optional parameters:
 RA3-Tweaks uses [Mono.Cecil](https://github.com/jbevain/cecil) to re-write some of the C# IL code that is used by the game.
 The re-written code is inserted to make calls out to another C# dll that can add new functionality to the game or change existing methods.
 It also uses [Unity](http://unity3d.com/) [asset bundles](http://docs.unity3d.com/Manual/AssetBundlesIntro.html) to add new UI and Unity assets.
+For debugging the injected code, it uses a modified version of [Dynity](https://github.com/HearthSim/dynity) which bootstraps the mono debugger in the RA3 game and allows the VS Tools for Unity to attach.
 This work was inspired by this [Q&A Post](http://steamcommunity.com/games/363530/announcements/detail/853808393799416587) from the RA3 developers:
 > I'd also like to ask if any modding tools will be supplied by Octopus Tree 
 > - Not at initial release. Between us, Unity games are HIGHLY MODDABLE without any support required on the Dev side. Clever folks can actually hook right into the C# mono code.
@@ -35,4 +36,12 @@ The current code changes that are applied are:
 
 
 ## Future improvements
-Lots to do, feel free to contribute!
+Lots to do, feel free to contribute or fork!
+
+
+## License information
+RA3-Tweaks is MIT licensed
+
+* Mono.Cecil is licensed under the MIT/X11 license. The source is available in the mono project repository.
+* pdb2mdb (https://gist.github.com/jbevain/ba23149da8369e4a966f) is licensed under the Microsoft Public License (Ms-PL).
+* dynity (https://github.com/HearthSim/dynity) is MIT licensed.
