@@ -180,5 +180,17 @@ namespace RA3Tweaks.Tweaks
             // Fallback to regular loading
             return Resources.Load(name);
         }
+
+        /// <summary>
+        /// Try to prevent tweaked bots from being uploaded to steam, 
+        /// since they could have custom components that will break other people
+        /// </summary>
+        [Tweak("MenuWorkshopUpload", "Start", false)]
+        [Tweak("MenuWorkshopUpload", "OnEnable", false)]
+        public static void OnEnable(MenuWorkshopUpload instance)
+        {
+            Debug.Log("No workshop upload allowed");
+            instance.OnExit();
+        }
     }
 }
