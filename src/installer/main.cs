@@ -354,9 +354,9 @@ namespace RA3Tweaks.Installer
 
                         // Now find matching calls to that method
                         var callFromInstructions = callFrom.Body.Instructions
-                            .Where(ii => ii != null && 
-                                         ii.OpCode == OpCodes.Call && 
-                                         ii.Operand != null && 
+                            .Where(ii => ii != null &&
+                                         ii.OpCode == OpCodes.Call &&
+                                         ii.Operand != null &&
                                          ii.Operand.ToString() == callToReplaceSig)
                             .ToArray();
 
@@ -369,8 +369,29 @@ namespace RA3Tweaks.Installer
                         // Now replace the call
                         foreach (var instruction in callFromInstructions)
                         {
+                            int skip = GetInstructionSkip(instruction);
+                            if (skip > 0)
+                            {
+                                Instruction removalOfThis = instruction;
+                                while (skip > 0)
+                                {
+                                    removalOfThis = removalOfThis.Previous;
+                                    skip += GetInstructionSkip(removalOfThis) - 1;
+                                }
+
+                                if (removalOfThis.OpCode != OpCodes.Ldarg_0)
+                                {
+                                    Console.WriteLine("Error - Could not find correct replacement instruction for non static call");
+                                    continue;
+                                }
+
+                                Console.WriteLine("Removing reference to 'this' for non-static call");
+                                processor.Remove(removalOfThis);
+                            }
+
                             Console.WriteLine(string.Format("Replacing call to {0} in {1}.{2}", instruction.Operand.ToString(), fromClassName, fromMethodName));
                             processor.Replace(instruction, processor.Create(OpCodes.Call, ra3.MainModule.Import(callTo.Resolve())));
+
                         }
                     }
 
@@ -382,6 +403,20 @@ namespace RA3Tweaks.Installer
             ra3.Write(assemblyPath);
 
             Console.WriteLine("\r\nModifications complete.");
+        }
+
+        private static int GetInstructionSkip(Instruction i)
+        {
+            int skip = 0;
+            if (i.OpCode == OpCodes.Call && i.Operand is MethodDefinition)
+            {
+                skip += 1 + (i.Operand as MethodDefinition).Parameters.Count();
+            }
+            else if (i.OpCode == OpCodes.Callvirt && i.Operand is MethodReference)
+            {
+                skip += 1 + (i.Operand as MethodReference).Parameters.Count();
+            }
+            return skip;
         }
 
         private static void ShowHelp()

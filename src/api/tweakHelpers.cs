@@ -55,6 +55,20 @@ static class TweakHelpers
     }
 
     /// <summary>
+    /// Write out all the properties for the specified object
+    /// </summary>
+    public static void LogProperties(object t, string title)
+    {
+        StringBuilder sb = new StringBuilder(title + "\r\n");
+        var props = t.GetType().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+        foreach (var p in props)
+        {
+            sb.AppendFormat("{0} ({1}) = {2}\r\n", p.Name, p.GetType().ToString(), p.GetValue(t, null));
+        }
+        Debug.Log(sb.ToString());
+    }
+
+    /// <summary>
     /// Write out the tree structure for the specified transform
     /// </summary>
     public static void LogTransform(Transform t, string title)
