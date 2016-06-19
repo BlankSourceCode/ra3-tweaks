@@ -18,7 +18,7 @@ Optional parameters:
 
 ## How it works
 RA3-Tweaks uses [Mono.Cecil](https://github.com/jbevain/cecil) to re-write some of the C# IL code that is used by the game.
-The re-written code is inserted to make calls out to another C# dll that can add new functionality to the game.
+The re-written code is inserted to make calls out to another C# dll that can add new functionality to the game or change existing methods.
 It also uses [Unity](http://unity3d.com/) [asset bundles](http://docs.unity3d.com/Manual/AssetBundlesIntro.html) to add new UI and Unity assets.
 This work was inspired by this [Q&A Post](http://steamcommunity.com/games/363530/announcements/detail/853808393799416587) from the RA3 developers:
 > I'd also like to ask if any modding tools will be supplied by Octopus Tree 
@@ -28,10 +28,11 @@ This work was inspired by this [Q&A Post](http://steamcommunity.com/games/363530
 ## Current Tweaks
 The current code changes that are applied are:
 * Added RA3-Tweaks Menu button
+* An example new component - the epic dagger
 * Ability to write out the components.json file to disk
 * Ability to export the models as *.obj files
-* Note: Exported files are outputted to `<Robot Arena 3 Directory>\RobotArena3_Data\Managed\ra3-tweaks\exported`
+* Note: Exported files are output to `<Robot Arena 3 Directory>\RobotArena3_Data\Managed\ra3-tweaks\exported`
 
 
 ## Future improvements
-The system could probably be expanded to import new components and arenas into the game
+Lots to do, feel free to contribute!
