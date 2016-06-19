@@ -5,7 +5,7 @@ RA3-Tweaks is a small application that can be used to apply code modifications t
 
 ## Usage
 To apply the tweaks:
-* Run `ra3-tweaks.exe`
+* Run `ra3-tweaker.exe`
 
 
 Optional parameters:
