@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -135,8 +136,8 @@ namespace RA3Tweaks.Tweaks
         {
             if (name.StartsWith("ComponentPrefabs/RA3Tweaks/"))
             {
-                Debug.Log("Loading "+ name + " resource from RA3-Tweaks...");
-                
+                Debug.Log("Loading " + name + " resource from RA3-Tweaks...");
+
                 // Load this up from out asset bundle
                 GameObject component = AssetsHandler.Bundle.LoadAsset<GameObject>(name.Replace("ComponentPrefabs/RA3Tweaks/", ""));
                 if (component.GetComponent<BotCompBase>() == null)
@@ -176,7 +177,7 @@ namespace RA3Tweaks.Tweaks
 
                 return component;
             }
-            
+
             // Fallback to regular loading
             return Resources.Load(name);
         }
@@ -191,6 +192,22 @@ namespace RA3Tweaks.Tweaks
         {
             Debug.Log("No workshop upload allowed");
             instance.OnExit();
+        }
+
+        [Tweak("MenuBotLab", "ChassisExtrudeUpdate", false)]
+        public static void ChassisExtrudeUpdate(MenuBotLab instance)
+        {
+            // Check that we are drawing the base plate
+            if (instance.GetPrivateField<MenuBotLab.EXTRUDE_STATE>("mExtrudeState") == MenuBotLab.EXTRUDE_STATE.DEFINE_SECTION)
+            {
+                var count = instance.GetPrivateField<List<Vector3>>("mVertices").Count;
+                if (count > 0)
+                {
+                    // Add a new end point that follows the mouse cursor (like RA2 did!)
+                    instance.mBasePlateLines.SetVertexCount(count + 1);
+                    instance.mBasePlateLines.SetPosition(count, instance.mCursorIndicator.transform.localPosition);
+                }
+            }
         }
     }
 }

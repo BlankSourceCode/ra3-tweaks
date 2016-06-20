@@ -12,7 +12,7 @@
     <RA3InstallDir>$(registry:HKEY_CURRENT_USER\SOFTWARE\Valve\Steam@SteamPath)/steamapps/common/Robot Arena 3/RobotArena3_Data/Managed</RA3InstallDir>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
+    <Reference Include="System.dll" />
     <Reference Include="$(RA3InstallDir)/UnityEngine.dll" />
     <Reference Include="$(RA3InstallDir)/UnityEngine.UI.dll" />
     <Reference Include="$(RA3InstallDir)/Assembly-CSharp.dll" />

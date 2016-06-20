@@ -281,7 +281,16 @@ namespace RA3Tweaks.Installer
                         }
 
                         // Add parameters to the call
+                        var endInstruction = entryInstr;
+                        if (!insertAtStart)
+                        {
+                            var newEnd = processor.Create(OpCodes.Nop);
+                            processor.Replace(entryInstr, newEnd);
+                            entryInstr = newEnd;
+                        }
+
                         processor.InsertBefore(entryInstr, processor.Create(callFrom.IsStatic ? OpCodes.Ldnull : OpCodes.Ldarg_0));
+                        
                         if (callFrom.Parameters.Count > 0)
                         {
                             processor.InsertBefore(entryInstr, processor.Create(callFrom.IsStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1));
@@ -352,6 +361,10 @@ namespace RA3Tweaks.Installer
                             }
 
                             processor.InsertBefore(entryInstr, processor.Create(OpCodes.Ret));
+                        }
+                        else if (!insertAtStart)
+                        {
+                            processor.Append(processor.Create(OpCodes.Ret));
                         }
                     }
                     else

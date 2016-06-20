@@ -20,6 +20,14 @@ static class TweakExtensions
     }
 
     /// <summary>
+    /// Get the value of a private field using reflection
+    /// </summary>
+    public static T GetPrivateField<T>(this object o, string name)
+    {
+        return (T)(o.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(o));
+    }
+
+    /// <summary>
     /// Search all decendants for a specifically named component of the correct type
     /// </summary>
     public static T FindAChild<T>(this Transform t, string name) where T : UnityEngine.Object
