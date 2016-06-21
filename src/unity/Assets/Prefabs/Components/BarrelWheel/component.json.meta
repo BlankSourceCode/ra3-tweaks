@@ -1,9 +1,8 @@
 fileFormatVersion: 2
-guid: 3992472b844914d44a142ca023d17832
-folderAsset: yes
-timeCreated: 1466188380
+guid: e598f0e56d596a34aa96412dc1024b6e
+timeCreated: 1466475005
 licenseType: Free
-DefaultImporter:
+TextScriptImporter:
   userData: 
   assetBundleName: ra3-tweaks
   assetBundleVariant: 

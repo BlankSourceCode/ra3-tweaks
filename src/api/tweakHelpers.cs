@@ -32,7 +32,6 @@ static class TweakExtensions
     /// </summary>
     public static T FindAChild<T>(this Transform t, string name) where T : UnityEngine.Object
     {
-
         Component[] transforms = t.GetComponentsInChildren(typeof(Transform), true);
         foreach (Transform transform in transforms)
         {

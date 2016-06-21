@@ -57,41 +57,45 @@ namespace RA3Tweaks.Tweaks
 
             // Load up the custom components.json file
             string newJson = "";
-            string path = Path.Combine(AssetsHandler.AssetDirectory, @".\components.json");
-            if (System.IO.File.Exists(path))
+            int count = 0;
+            string[] allAssets = AssetsHandler.Bundle.GetAllAssetNames();
+            foreach(var a in allAssets)
             {
-                newJson = System.IO.File.ReadAllText(path);
-            }
-            else
-            {
-                newJson = AssetsHandler.Bundle.LoadAsset<TextAsset>("Components").text;
-            }
-
-            if (newJson != null)
-            {
-                // Prefix the prefab name with something we can identify later
-                Regex r = new Regex("\"componentprefabname\"\\s*:\\s*\"");
-                newJson = r.Replace(newJson, "\"componentprefabname\": \"RA3Tweaks/");
-
-                Regex r2 = new Regex("\"thumbnail\"\\s*:\\s*\"");
-                newJson = r2.Replace(newJson, "\"thumbnail\": \"RA3Tweaks/");
-
-                Debug.Log("Components.json loaded as:\r\n" + newJson);
-
-                // Strip off the mismatched [ ] and combine the files
-                int startIndex = newJson.IndexOf('[');
-                int endIndex = jsonString.LastIndexOf(']');
-                if (startIndex > -1 && endIndex > -1)
+                if (a.EndsWith("/component.json", StringComparison.OrdinalIgnoreCase))
                 {
-                    jsonString = jsonString.Substring(0, endIndex - 1) + ",\r\n" + newJson.Substring(startIndex + 1);
+                    // Append this component to the json
+                    string compJson = AssetsHandler.Bundle.LoadAsset<TextAsset>(a).text;
+                    string componentName = a.Substring(0, a.LastIndexOf('/') + 1);
+
+                    // Prefix the prefab name with something we can identify later
+                    Regex r = new Regex("\"componentprefabname\"\\s*:\\s*\"");
+                    compJson = r.Replace(compJson, "\"componentprefabname\": \"RA3Tweaks/" + componentName);
+
+                    Regex r2 = new Regex("\"thumbnail\"\\s*:\\s*\"");
+                    compJson = r2.Replace(compJson, "\"thumbnail\": \"RA3Tweaks/" + componentName);
+
+                    Debug.Log("Component.json loaded as:\r\n" + compJson);
+
+                    newJson += (count > 0 ? ",\r\n" : "") + compJson;
+                    count++;
                 }
             }
 
+            if (count > 0)
+            {
+                // Strip off the mismatched [ ] and combine the files
+                int endIndex = jsonString.LastIndexOf(']');
+                if (endIndex > -1)
+                {
+                    jsonString = jsonString.Substring(0, endIndex - 1) + ",\r\n" + newJson + "\r\n]";
+                    Debug.Log(jsonString);
+                }
+            }
+
+
             // Call the original load with the new modified json
             ComponentInfoList instance = typeof(ComponentInfoList).GetField("_instance", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null) as ComponentInfoList;
-            int count = instance.LoadFromJsonString(jsonString);
-            Debug.Log("Total components loaded = " + count);
-            return count;
+            return instance.LoadFromJsonString(jsonString);
         }
 
         /// <summary>
@@ -147,39 +151,78 @@ namespace RA3Tweaks.Tweaks
                     // Update the name
                     component.name = name.Replace("ComponentPrefabs/", "");
 
-                    // Add missing components since the asset bundle won't contain them
-                    component.AddComponent<CollisionHandler>();
-                    component.AddComponent<InterActMaterial>();
-                    var botcomp = component.AddComponent<BotCompBase>();
-                    botcomp.mPrefabName = name.Replace("ComponentPrefabs/", "");
-
-                    // Replace the transforms named 'AttachPoint' with AttachPoint instances
+                    // Find the TweakInfo for this component
                     int apId = 0;
-                    var all = component.GetComponentsInChildren<Transform>();
-                    foreach (var t in all)
+                    for (int i = 0; i < component.transform.childCount; i++)
                     {
-                        if (t.name == "AttachPoint")
+                        var t = component.transform.GetChild(i);
+                        if (t.name.Equals("TweakInfo", StringComparison.OrdinalIgnoreCase))
                         {
-                            // TODO: Allow this data to be specified in the component somehow
-                            var ap = component.AddComponent<AttachPoint>();
-                            ap.mId = apId;
-                            ap.mSocketType = SocketType.ST_FIXED;
-                            ap.mOffset = t.transform.localPosition;
-                            ap.mParent = component.transform;
-                            ap.mNormal = t.transform.localRotation * Vector3.up;
-                            ap.mIsPlug = true;
-                            ap.mIsSocket = true;
+                            // Search the TweakInfo for convertable classes
+                            for (int j = 0; j < t.childCount; j++)
+                            {
+                                // Replace the transforms with instances since asset bundles can't transfer custom properties
+                                var info = t.GetChild(j);
+                                Type infoType = typeof(BotCompBase).Assembly.GetType(info.name);
+                                if (infoType != null)
+                                {
+                                    // Add this type of component
+                                    var newComponent = component.AddComponent(infoType);
+
+                                    if (newComponent is AttachPoint)
+                                    {
+                                        var ap = (AttachPoint)newComponent;
+                                        ap.mId = apId;
+                                        ap.mOffset = info.transform.localPosition;
+                                        ap.mParent = component.transform;
+                                        ap.mNormal = info.transform.localRotation * Vector3.up;
+
+                                        // Read in the plug/socket info from children transforms
+                                        ap.mIsPlug = (ap.transform.FindChildByName("Plug") != null);
+                                        var socket = ap.transform.FindChildByName("Socket");
+                                        ap.mIsSocket = (socket != null);
+                                        ap.mSocketType = SocketType.ST_FIXED;
+                                        if (socket != null && socket.childCount > 0)
+                                        {
+                                            switch (socket.GetChild(0).name.ToLowerInvariant())
+                                            {
+                                                case "fixed":
+                                                    ap.mSocketType = SocketType.ST_FIXED;
+                                                    break;
+                                                case "motor":
+                                                    ap.mSocketType = SocketType.ST_MOTOR;
+                                                    break;
+                                                case "swing":
+                                                    ap.mSocketType = SocketType.ST_SWING;
+                                                    break;
+                                                case "wheel":
+                                                    ap.mSocketType = SocketType.ST_WHEEL;
+                                                    break;
+                                            }
+                                        }
+                                        apId++;
+                                    }
+                                    else if (newComponent is BotCompBase)
+                                    {
+                                        ((BotCompBase)newComponent).mPrefabName = name.Replace("ComponentPrefabs/", "");
+                                    }
+                                }
+                            }
+
                             GameObject.Destroy(t.gameObject);
-                            apId++;
+                            break;
                         }
                     }
                 }
 
+                TweakHelpers.LogTransform((component as GameObject).transform, "STOCK " + name);
                 return component;
             }
 
             // Fallback to regular loading
-            return Resources.Load(name);
+            var stockComponent = Resources.Load(name);
+            TweakHelpers.LogTransform((stockComponent as GameObject).transform, "STOCK " + name);
+            return stockComponent;
         }
 
         /// <summary>

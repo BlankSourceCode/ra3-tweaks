@@ -16,10 +16,10 @@
     <Reference Include="$(RA3InstallDir)/UnityEngine.dll" />
     <Reference Include="$(RA3InstallDir)/UnityEngine.UI.dll" />
     <Reference Include="$(RA3InstallDir)/Assembly-CSharp.dll" />
-    <Compile Include="./**/*.cs;../api/**/*.cs" />
+    <Compile Include="./**/*.cs;../api/**/*.cs;../unity/assets/api/*.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="../api/**/*.cs">
+    <Content Include="../api/**/*.cs;../unity/assets/api/*.cs">
       <Link>APIFiles</Link>
     </Content>
   </ItemGroup>

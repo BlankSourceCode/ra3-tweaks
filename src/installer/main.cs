@@ -181,7 +181,7 @@ namespace RA3Tweaks.Installer
                     {
                         File.Copy(file, Path.Combine(assetDestPath, Path.GetFileName(file)), true);
                     }
-
+                    
                     // Perform the injection
                     Console.WriteLine("Modifying assembly...");
                     Installer.PerformInjection(rootPath, assemblyPath, backupPath, finalPath);
